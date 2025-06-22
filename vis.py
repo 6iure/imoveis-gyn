@@ -14,20 +14,23 @@ imoveis
 # %% 
 imoveis.head()
 
-# %%
-# %% mostrando as areas que o imovel contem mais de um tamanho
-# todo como iremos tratar esses dados? fazendo a media OU dropando esses dados, pois sao 62linhas e nao fariam diferenca em um banco de dados de 20000 linhas, alem de que muitas ainda tem problemas em preco ou outras colunas
-imoveis_temp = imoveis.dropna(subset=['AREAS'])
-imoveis_temp[imoveis_temp['AREAS'].str.contains('-', regex=False)]
-
 # %% tratando de dados NULOS, nesse caso o tratamento é dropar mesmo
-imoveis = imoveis.dropna(subset=['TIPO', 'PRICE', 'AREAS'])
-imoveis
+imoveis_filtrado = imoveis.dropna(subset=['TIPO', 'PRICE', 'AREAS'])
+imoveis_filtrado
+
+# %%
+imoveis['TIPO'].unique()
+
+# %% dropando os TIPOS de imoveis que nao vamos usar, #todo considerar os outros apartamentos pequenos futuramente 
+imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['TIPO'].isin(['casas', 'apartamentos'])]
+imoveis_filtrado
 
 # %% 
-imoveis.info()
+#* mostrando todos os imoveis que estao dentro de uma faixa de area
+# todo como iremos tratar esses dados? 
+imoveis_filtrado[imoveis_filtrado['AREAS'].str.contains('-', regex=False)]
 
-# %%
+# %% #* funcao para converter valores de preco, iptu e condominio de objeto para float
 
 def converter_para_float(valor):
     try:
@@ -36,15 +39,19 @@ def converter_para_float(valor):
     except:
         return None
 
-imoveis['PRICE_CONVERTED'] = imoveis['PRICE'].apply(converter_para_float)
-imoveis['IPTU_CONVERTED'] = imoveis['IPTU'].apply(converter_para_float)
-imoveis['CONDOMÍNIO_CONVERTED'] = imoveis['CONDOMÍNIO'].apply(converter_para_float)
-# imoveis = imoveis.dropna(subset=['PRICE_CONVERTED'])
+imoveis_filtrado['PRICE_CONVERTED'] = imoveis_filtrado['PRICE'].apply(converter_para_float)
+imoveis_filtrado['IPTU_CONVERTED'] = imoveis_filtrado['IPTU'].apply(converter_para_float)
+imoveis_filtrado['CONDOMÍNIO_CONVERTED'] = imoveis_filtrado['CONDOMÍNIO'].apply(converter_para_float)
 
+imoveis_filtrado
 
-imoveis
+# %% #* agora dropando os valores nulos de preco
+imoveis_filtrado = imoveis_filtrado.dropna(subset=['PRICE','PRICE_CONVERTED'])
+imoveis_filtrado
+# imoveis_filtrado = imoveis_filtrado.dropna(subset=['IPTU' ,'IPTU_CONVERTED'])
+# imoveis_filtrado = imoveis_filtrado.dropna(subset=['CONDOMÍNIO' ,'CONDOMÍNIO_CONVERTED'])
 
-# %% 
+# %% #* para tratar os imoveis que estao dentro de uma faixa de area, convertemos as AREAS que estao numa faixa para sua media 
 
 def converter_area_para_float(area):
     try:
@@ -61,51 +68,63 @@ def converter_area_para_float(area):
     except:
         return None
 
-imoveis
-
 # %%
-imoveis['AREAS_CONVERTED'] = imoveis['AREAS'].apply(converter_area_para_float)
-imoveis
+imoveis_filtrado['AREAS_CONVERTED'] = imoveis_filtrado['AREAS'].apply(converter_area_para_float)
+imoveis_filtrado
 
 #%%
-imoveis['PRICE_M2'] = imoveis['PRICE_CONVERTED'] / imoveis['AREAS_CONVERTED']
-imoveis
+imoveis_filtrado['PRICE_M2'] = imoveis_filtrado['PRICE_CONVERTED'] / imoveis_filtrado['AREAS_CONVERTED']
+imoveis_filtrado
 
 
 # %% Media dos precos/m2 dos imoveis
-imoveis['PRICE_M2'].mean()
-# %% Mediana dos precos/m2 dos imoveis3
-
-imoveis['PRICE_M2'].median()
+imoveis_filtrado['PRICE_M2'].mean()
+# %% Mediana dos precos/m2 dos imoveis
+imoveis_filtrado['PRICE_M2'].median()
 
 # %%
-comparacao = imoveis.groupby('TIPO')['PRICE_M2'].describe()
+comparacao = imoveis_filtrado.groupby('TIPO')['PRICE_M2'].describe()
 comparacao
 
 # %% 
 # Gráfico de barras com as médias
-medias = imoveis.groupby('TIPO')['PRICE_M2'].mean().reset_index()
+medias = imoveis_filtrado.groupby('TIPO')['PRICE_M2'].mean().reset_index()
 plt.figure(figsize=(8, 5))
 sns.barplot(x='TIPO', y='PRICE_M2', data=medias)
-plt.xticks(rotation=45, ha='right') 
+# plt.xticks(rotation=45, ha='right') 
 plt.title('Preço Médio por m² por Tipo de Imóvel')
 plt.xlabel('Tipo de Imóvel')
 plt.ylabel('Preço por m² (R$)')
 plt.tight_layout() 
 plt.show()
 
+# %% 
+imoveis_filtrado['AREAS_CONVERTED'].describe()
+
+# %% #* filtrando primeiro por area, usando a fonte do diario de goias para o maior imovel a venda no estado que eh uma casa com 2600 m2 construidos.
+imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['AREAS_CONVERTED'] <= 2600]
+imoveis_filtrado['AREAS_CONVERTED'].describe()
+
+# %%
+
+imoveis_filtrado['PRICE_M2'].describe()
+# %%
+#* filtrando agora por PRECO, usando a fonte do guia curta mais
+imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['PRICE_M2'] <= 50000]
+imoveis_filtrado['PRICE_M2'].describe()
+
+# %%
 # %% boxplot com as infos de comparacao 
 plt.figure(figsize=(12, 8))
 sns.boxplot(
     x='TIPO',
     y='PRICE_M2',
-    data=imoveis,
+    data=imoveis_filtrado,
 )
 
-plt.xticks(rotation=45, ha='right') 
+# plt.xticks(rotation=45, ha='right') 
 plt.title('Distribuição de Preço por m² por Tipo de Imóvel')
 plt.show()
-
-
-
+# %%
+imoveis_filtrado.groupby('TIPO')['PRICE_M2'].describe()
 # %%
