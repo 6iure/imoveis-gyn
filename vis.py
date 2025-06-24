@@ -22,12 +22,12 @@ imoveis_filtrado
 imoveis['TIPO'].unique()
 
 # %% dropando os TIPOS de imoveis que nao vamos usar, #todo considerar os outros apartamentos pequenos futuramente 
-imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['TIPO'].isin(['casas', 'apartamentos'])]
+imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['TIPO'].isin(['casas', 'apartamentos' ])]
 imoveis_filtrado
 
 # %% 
 #* mostrando todos os imoveis que estao dentro de uma faixa de area
-# todo como iremos tratar esses dados? 
+# tratamento foi feito usando a media da faixa que esta na area 
 imoveis_filtrado[imoveis_filtrado['AREAS'].str.contains('-', regex=False)]
 
 # %% #* funcao para converter valores de preco, iptu e condominio de objeto para float
@@ -82,9 +82,8 @@ imoveis_filtrado['PRICE_M2'].mean()
 # %% Mediana dos precos/m2 dos imoveis
 imoveis_filtrado['PRICE_M2'].median()
 
-# %%
-comparacao = imoveis_filtrado.groupby('TIPO')['PRICE_M2'].describe()
-comparacao
+# %% #* dados descritivos antes de tratar os dados
+imoveis_filtrado.groupby('TIPO')['PRICE_M2'].describe()
 
 # %% 
 # Gráfico de barras com as médias
@@ -106,25 +105,70 @@ imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['AREAS_CONVERTED'] <= 2600]
 imoveis_filtrado['AREAS_CONVERTED'].describe()
 
 # %%
-
 imoveis_filtrado['PRICE_M2'].describe()
 # %%
-#* filtrando agora por PRECO, usando a fonte do guia curta mais
-imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['PRICE_M2'] <= 50000]
+#* filtrando agora por PRECO/M2, usando a fonte do guia curta mais
+imoveis_filtrado = imoveis_filtrado[imoveis_filtrado['PRICE_M2'] <= 20000]
 imoveis_filtrado['PRICE_M2'].describe()
 
-# %%
+# %% agora dados descritivos depois de tratar os dados
+imoveis_filtrado.groupby('TIPO')['PRICE_M2'].describe()
 # %% boxplot com as infos de comparacao 
 plt.figure(figsize=(12, 8))
 sns.boxplot(
     x='TIPO',
     y='PRICE_M2',
     data=imoveis_filtrado,
+    palette='viridis',  # Cores mais modernas
+    width=0.6,         # Largura das caixas
+    linewidth=1.5,      # Espessura das bordas
+    fliersize=3,       # Tamanho dos outliers
 )
 
-# plt.xticks(rotation=45, ha='right') 
-plt.title('Distribuição de Preço por m² por Tipo de Imóvel')
+plt.title('Distribuição de Preço por m² por Tipo de Imóvel', fontsize=16, pad=20, fontweight='bold')
+plt.xlabel('Tipo de Imóvel', fontsize=12, fontweight='bold')
+plt.ylabel('Preço por m² (R$)', fontsize=12, fontweight='bold')
+plt.grid(axis='y', linestyle='--', alpha=0.4)    # Grid suave
+plt.tight_layout()  # Ajusta o layout
+
 plt.show()
-# %%
-imoveis_filtrado.groupby('TIPO')['PRICE_M2'].describe()
-# %%
+# %% grafico de dispersao e boxplot
+
+plt.figure(figsize=(14, 8))
+
+# Boxplot principal
+box = sns.boxplot(
+    x='TIPO',
+    y='PRICE_M2',
+    data=imoveis_filtrado,
+    width=0.5,
+    showfliers=False,
+    palette='viridis',
+    linewidth=2,
+    boxprops=dict(alpha=0.7),
+    whiskerprops={'linewidth': 1.5},
+)
+
+# Stripplot sobreposto
+strip = sns.stripplot(
+    x='TIPO',
+    y='PRICE_M2',
+    data=imoveis_filtrado,
+    jitter=0.25,
+    alpha=0.5,
+    size=5,
+    palette='viridis',
+    edgecolor='gray',
+    linewidth=0.5
+)
+
+plt.title('Distribuição de Preços por m² por Tipo de Imóvel e sua Dispersao', 
+          fontsize=16, pad=20, fontweight='bold')
+plt.xlabel('Tipo de Imóvel',fontweight='bold', fontsize=13, labelpad=10)
+plt.ylabel('Preço por m² (R$)', fontsize=13, labelpad=10, fontweight='bold')
+plt.yticks(fontsize=11)
+
+# Ajuste final
+plt.tight_layout()
+sns.despine(left=True)
+plt.show()
