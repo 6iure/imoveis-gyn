@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 # %%
-imoveis_path = "data/banco_de_dados.csv"
+imoveis_path = "../data/banco_de_dados.csv"
 imoveis = pd.read_csv(imoveis_path)
 imoveis
 # %% 
@@ -272,7 +272,7 @@ bairros_consolidados
 # %% 
 bairros_consolidados['total_imoveis'].sum()
 # %%
-top_consolidados = bairros_consolidados.sort_values('total_imoveis', ascending=True).tail(20)
+top_consolidados = bairros_consolidados.sort_values('total_imoveis', ascending=True).tail(15)
 top_consolidados
 # %%
 plt.figure(figsize=(12,8))
