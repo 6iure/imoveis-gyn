@@ -300,9 +300,9 @@ scatter = sns.scatterplot(
     y='mediana_preco_m2', 
     hue='bairro', 
     palette='Spectral', 
-    s=150,             # Aumentei o tamanho dos pontos
+    s=150,             
     alpha=0.8,
-    edgecolor='black',  # Borda nos pontos
+    edgecolor='black',
     linewidth=0.5
 )
 
