@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import re
 
 # %%
 imoveis_path = '../data/banco_de_dados.csv'
@@ -156,4 +157,55 @@ plt.xlabel('Faixa de Preço', fontsize=12, fontweight='bold')
 
 plt.tight_layout()
 plt.show()
+# %% #* IDEIA 4 - Correlacao para ver qual variavel mais explica o preco 
+imoveis_filtrado
+
+# %% funcao para transformar as colunas de QUARTO, BANHEIRO E VAGAS DE GARAGEM em numero.
+
+def converter_para_float(valor):
+    try:
+        valor = str(valor)
+        return float(valor)
+    except:
+        return None
+    
 # %%
+imoveis_filtrado['quartos'] = imoveis_filtrado['BEDROOMS'].apply(converter_para_float)
+imoveis_filtrado['vagas_garagem'] = imoveis_filtrado['PARKING-SPACES'].apply(converter_para_float)
+imoveis_filtrado['banheiros'] = imoveis_filtrado['BATHROOMS'].apply(converter_para_float)
+imoveis_filtrado
+
+# %%
+temp = imoveis_filtrado.drop(columns=['DATE', 'PRICE', 'AREAS', 'CONDOMÍNIO','IPTU',
+                                      'IPTU_CONVERTED' ,'CONDOMÍNIO_CONVERTED', 'TIPO', 'faixa_preco','BEDROOMS','PARKING-SPACES','BATHROOMS', 'ADDRESS'])
+temp
+
+# %%
+temp = temp.dropna(subset=['quartos','vagas_garagem', 'banheiros'])
+temp
+
+# %%
+temp = temp.rename(columns={'PRICE_CONVERTED' : 'Preço', 'AREAS_CONVERTED' : 'Área', 'PRICE_M2' : 'Preço do m²', 'quartos':'Qtd. Quartos', 'vagas_garagem': 'Vagas na Garagem', 'banheiros': 'Qtd. Banheiros'})
+temp
+# %%
+mat_corr = temp.corr(method='pearson')
+
+plt.figure(figsize=(12,8))
+sns.heatmap(mat_corr,
+            annot=True,
+            fmt=".2f",
+            cmap='coolwarm',
+            center=0,
+            vmin=-1,
+            vmax=1,
+            linewidths=0.5,
+            annot_kws={"size": 10, "weight": "bold"},
+            )
+
+plt.title('Matriz de Correlação  \n Qual variavél mais explica o Preço', 
+          fontsize=14, pad=20, fontweight='bold')
+
+plt.xticks(rotation=45, ha='right', fontsize=12)
+plt.yticks(rotation=0, fontsize=12)
+plt.tight_layout()
+plt.show()
