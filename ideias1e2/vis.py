@@ -7,6 +7,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 # %%
 imoveis_path = "../data/banco_de_dados.csv"
 imoveis = pd.read_csv(imoveis_path)
@@ -327,5 +328,95 @@ plt.ylim(0, top_consolidados['mediana_preco_m2'].max() + buffer_y)
 
 plt.tight_layout()
 plt.show()
- 
+# %% ideia 5
+imoveis_filtrado
+
+# %%
+imoveis_filtrado['quartos'] = imoveis_filtrado['BEDROOMS'].apply(converter_para_float)
+imoveis_filtrado['vagas_garagem'] = imoveis_filtrado['PARKING-SPACES'].apply(converter_para_float)
+imoveis_filtrado['banheiros'] = imoveis_filtrado['BATHROOMS'].apply(converter_para_float)
+imoveis_filtrado
+# %%
+temp = imoveis_filtrado.drop(columns=['DATE', 'PRICE', 'AREAS', 'CONDOMÍNIO','IPTU',
+                                      'IPTU_CONVERTED' ,'CONDOMÍNIO_CONVERTED', 'BEDROOMS','PARKING-SPACES','BATHROOMS', 'ADDRESS'])
+temp
+# %% 15550 linhas
+temp = temp.dropna(subset=['quartos','vagas_garagem', 'banheiros'])
+temp
+
+# %%
+jovem_solteiro = temp[(temp['AREAS_CONVERTED'] <= 80) & (temp['quartos'] <= 2)]
+jovem_solteiro
+# %%
+casal_com_filhos = temp[temp['AREAS_CONVERTED'].between(90, 200) & 
+                        temp['quartos'].between(2, 4)]
+casal_com_filhos
+# %%
+idoso_aposentado = temp[temp['AREAS_CONVERTED'].between(50, 150) & 
+                        temp['quartos'].between(2, 3)]
+idoso_aposentado
+# %%
+
+# %%
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+sns.set_style("whitegrid")
+plt.figure(figsize=(18, 12))
+
+#coluna 'Perfil' a cada df
+jovem_solteiro['Perfil'] = 'Jovem Solteiro'
+casal_com_filhos['Perfil'] = 'Casal com Filhos'
+idoso_aposentado['Perfil'] = 'Idoso Aposentado'
+
+df_comparacao = pd.concat([jovem_solteiro, casal_com_filhos, idoso_aposentado])
+
+# --- GRÁFICO 1: Distribuição de Preços (Boxplot) ---
+plt.subplot(2, 2, 1)
+sns.boxplot(data=df_comparacao, x='Perfil', y='PRICE_M2', palette='pastel')
+plt.title('Distribuição de Preços por m² por Perfil', fontweight='bold')
+plt.ylabel('Preço por m² (R$)', fontweight='bold')
+plt.xlabel('')
+plt.gca().yaxis.set_major_formatter('R${x:.0f}')
+
+
+# --- GRÁFICO 2: Área Média (Barplot) ---
+plt.subplot(2, 2, 2)
+sns.barplot(data=df_comparacao, x='Perfil', y='AREAS_CONVERTED', ci=None, palette='pastel')
+plt.title('Área Média por Perfil (m²)', fontweight='bold')
+plt.ylabel('Área (m²)', fontweight='bold')
+plt.xlabel('')
+
+# --- GRÁFICO 3: Top 10 bairros por perfil ---
+plt.subplot(2, 2, 3)
+
+top_bairros = df_comparacao['bairro_limpo'].value_counts().nlargest(10).index
+df_top_bairros = df_comparacao[df_comparacao['bairro_limpo'].isin(top_bairros)]
+
+sns.countplot(
+    data=df_top_bairros,
+    y='bairro_limpo',
+    hue='Perfil',
+    palette='pastel',
+    order=top_bairros  
+)
+plt.title('Top 10 Bairros por Perfil', fontweight='bold')
+plt.xlabel('Número de Imóveis', fontweight='bold')
+plt.ylabel('Bairro', fontweight='bold')
+plt.legend(title='Perfil', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+# --- GRÁFICO 4: Tipos de Imóvel (Countplot) ---
+plt.subplot(2, 2, 4)
+sns.countplot(data=df_comparacao, x='TIPO', hue='Perfil', palette='pastel')
+plt.title('Preferência por Tipo de Imóvel', fontweight='bold')
+plt.xlabel('Tipo de Imóvel', fontweight='bold')
+plt.ylabel('Número de Imóveis', fontweight='bold')
+plt.legend(title='Perfil')
+
+plt.tight_layout()
+plt.suptitle('Análise Comparativa de Perfis Imobiliários', y=1.02, fontsize=16, fontweight='bold')
+plt.show()
+# %%
+df_comparacao
 # %%
